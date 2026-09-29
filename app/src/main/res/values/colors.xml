@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="midnight">#010736</color>
+    <color name="darker">#0D1C42</color>
+    <color name="purpledark">#1A1953</color>
+    <color name="olivetypes">#5A9690</color>
+    <color name="darknavy">#234C6A</color>
 </resources>
