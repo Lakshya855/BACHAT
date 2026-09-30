@@ -16,6 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/tagline0"
+        android:fontFamily="@font/googlesans_17pt_semibold"
         android:gravity="center"
         android:textSize="40dp"
         android:textColor="@color/white"/>
@@ -77,14 +78,14 @@
         android:gravity="center">
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/buttonSignUp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/signup" />
 
         <Button
-            android:id="@+id/button4"
+            android:id="@+id/buttonLogIn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"

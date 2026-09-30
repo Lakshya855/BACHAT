@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">BACHAT</string>
     <string name="sign_in">Sign in</string>
-    <string name="tagline0">Namaste User!</string>
+    <string name="tagline0">नमस्ते User!</string>
     <string name="tagline1">Don\'t think about</string>
     <string name="tagline2">your money</string>
     <string name="tagline3">is here</string>
@@ -9,4 +9,5 @@
     <string name="tagline5">is here!</string>
     <string name="signup">Sign up</string>
     <string name="login">Log in</string>
+    <string name="gender">Please select your Gender</string>
 </resources>
