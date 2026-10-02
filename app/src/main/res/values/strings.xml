@@ -1,13 +1,15 @@
 <resources>
     <string name="app_name">BACHAT</string>
     <string name="sign_in">Sign in</string>
-    <string name="tagline0">नमस्ते User!</string>
-    <string name="tagline1">Don\'t think about</string>
-    <string name="tagline2">your money</string>
+    <string name="tagline0">नमस्ते</string>
+    <string name="tagline0.1">User!</string>
+    <string name="tagline1">Don\'t worry about your</string>
+    <string name="tagline2">electricity bill</string>
     <string name="tagline3">is here</string>
-    <string name="tagline4">BECAUSE</string>
+    <string name="tagline4">let Bachat help you save money</string>
     <string name="tagline5">is here!</string>
     <string name="signup">Sign up</string>
     <string name="login">Log in</string>
     <string name="gender">Please select your Gender</string>
+    <string name="terms_line">Read the Bachat User Agreement →</string>
 </resources>
