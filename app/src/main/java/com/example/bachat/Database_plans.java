@@ -88,6 +88,11 @@ public class Database_plans extends SQLiteOpenHelper {
         return db.rawQuery("SELECT * FROM " + TABLE_ENVIRONMENTS + " WHERE USER_ID IS NULL OR USER_ID = ? ORDER BY ID", new String[]{String.valueOf(userId)});
     }
 
+    public Cursor getUserEnvironments(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_ENVIRONMENTS + " WHERE USER_ID = ? ORDER BY ID", new String[]{String.valueOf(userId)});
+    }
+
     public boolean addEnvironment(String name, int userId) {
 
         SQLiteDatabase db = this.getWritableDatabase();

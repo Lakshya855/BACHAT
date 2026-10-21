@@ -57,6 +57,17 @@ public class Database_users extends SQLiteOpenHelper{
         return result;
     }
 
+    public int getUserId(String Email, String Password) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT " + COL_1 + " FROM " + TABLE_NAME + " WHERE " + COL_3 + " = ? AND " + COL_4 + " = ?", new String[]{Email, Password});
+        int id = -1;
+        if (cursor.moveToFirst()) {
+            id = cursor.getInt(0);
+        }
+        cursor.close();
+        return id;
+    }
+
 
     public boolean insertGoogleUser(String name, String email, String policy) {
         SQLiteDatabase db = this.getWritableDatabase();

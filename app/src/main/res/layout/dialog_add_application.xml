@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Appliance Type"
+        android:textColor="@color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <Spinner
+        android:id="@+id/spinnerApplianceType"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/editTextAppName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Application Name"
+        android:inputType="text"
+        android:layout_marginBottom="10dp"/>
+
+    <EditText
+        android:id="@+id/editTextPower"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Power (Watts)"
+        android:inputType="numberDecimal"
+        android:layout_marginBottom="10dp"/>
+
+    <EditText
+        android:id="@+id/editTextVoltage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Voltage (V)"
+        android:inputType="numberDecimal"
+        android:layout_marginBottom="10dp"/>
+
+    <EditText
+        android:id="@+id/editTextBudget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Monthly Budget"
+        android:inputType="numberDecimal"
+        android:layout_marginBottom="10dp"/>
+
+</LinearLayout>

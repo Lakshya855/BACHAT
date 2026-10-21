@@ -34,7 +34,6 @@ import com.google.firebase.auth.GoogleAuthProvider;
 public class Signup extends AppCompatActivity {
 
     private EditText id,name,email,password;
-    private TextView Terms;
     private RadioGroup radioGroupgender;
     private CheckBox policy;
     private Button go,contactSupport;
@@ -57,7 +56,6 @@ public class Signup extends AppCompatActivity {
         policy = findViewById(R.id.checkBoxNewsletter);
         go = findViewById(R.id.buttonSave);
         contactSupport = findViewById(R.id.contact_support);
-        Terms = findViewById(R.id.terms);
         google = findViewById(R.id.googleSignIn);
 
         //initialise database helper
@@ -76,19 +74,6 @@ public class Signup extends AppCompatActivity {
                 Intent intent = new Intent(Intent.ACTION_DIAL);
                 intent.setData(Uri.parse("tel:+916378772026"));
                 startActivity(intent);
-            }
-        });
-
-        Terms.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(Signup.this);
-                builder.setTitle("Agreement");
-                builder.setMessage("By creating an account, you agree to use Bachat for monitoring and optimizing electricity consumption. You understand that the electricity-saving suggestions provided by the app are recommendations and actual savings may vary depending on usage, appliance efficiency, electricity tariffs, and other factors.\n" +
-                        "\n" +
-                        "You agree to provide accurate information and use the application responsibly. Your account information will be handled according to our privacy policy.");
-                builder.setPositiveButton("Ok",null);
-                builder.show();
             }
         });
 
@@ -214,6 +199,9 @@ public class Signup extends AppCompatActivity {
 
         if(isInserted){
             Toast.makeText(getApplicationContext(),"Data entered successfully",Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(Signup.this, Login.class);
+            startActivity(intent);
+            finish();
         }
         else{
             Toast.makeText(getApplicationContext(),"Error",Toast.LENGTH_LONG).show();
