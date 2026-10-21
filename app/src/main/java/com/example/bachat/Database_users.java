@@ -49,15 +49,49 @@ public class Database_users extends SQLiteOpenHelper{
     public boolean checkData(String Email,String Password){
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = db.rawQuery(
-                "SELECT * FROM " + TABLE_NAME +
-                        " WHERE " + COL_3 + " = ? AND " + COL_4 + " = ?",
-                new String[]{Email, Password}
-        );
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE " + COL_3 + " = ? AND " + COL_4 + " = ?", new String[]{Email, Password});
 
         boolean result = cursor.getCount() > 0;
         cursor.close();
 
         return result;
+    }
+
+
+    public boolean insertGoogleUser(String name, String email, String policy) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = db.query(TABLE_NAME, new String[]{COL_1}, COL_3 + " = ?", new String[]{email}, null, null, null);
+
+        boolean exists = cursor.moveToFirst();
+        cursor.close();
+
+        if (exists) {
+            return true;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(COL_2, name);
+        values.put(COL_3, email);
+        values.putNull(COL_4);
+        values.putNull(COL_5);
+        values.put(COL_6, policy);
+
+        long result = db.insert(TABLE_NAME, null, values);
+
+        return result != -1;
+    }
+
+
+    public boolean updateGoogleUserDetails(String email, String password, String gender) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(COL_4, password);
+        values.put(COL_5, gender);
+
+        int result = db.update(TABLE_NAME,values, COL_3 + " = ?", new String[]{email});
+        return result > 0;
     }
 }
