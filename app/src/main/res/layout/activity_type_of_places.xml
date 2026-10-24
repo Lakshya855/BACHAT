@@ -19,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@android:color/transparent"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:navigationIconTint="@color/text_primary"
             app:layout_constraintTop_toTopOf="parent"
             app:titleTextColor="@color/accent_green"
             app:title="BACHAT" />
@@ -59,6 +59,7 @@
                         android:gravity="center_vertical">
 
                         <TextView
+                            android:id="@+id/tvBudgetHeaderTitle"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
@@ -79,9 +80,10 @@
                             android:paddingVertical="4dp">
 
                             <View
+                                android:id="@+id/viewBudgetStatusDot"
                                 android:layout_width="6dp"
                                 android:layout_height="6dp"
-                                android:background="@drawable/bg_icon_circle_green"
+                                android:background="@drawable/bg_status_dot_green"
                                 android:layout_marginEnd="6dp" />
 
                             <TextView
@@ -107,7 +109,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="₹ 0"
-                            android:textColor="@color/white"
+                            android:textColor="@color/text_primary"
                             android:textSize="26sp"
                             android:textStyle="bold" />
 
@@ -175,44 +177,50 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/chipCompare"
+                        android:id="@+id/chipSchedule"
                         android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:background="@drawable/bg_chip"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_chip_green"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="14dp"
-                        android:text="⚡  Smart Upgrade"
-                        android:textColor="@color/text_primary"
+                        android:drawableStart="@drawable/ic_clock"
+                        android:drawablePadding="8dp"
+                        android:text="Smart Hours"
+                        android:textColor="@color/accent_green"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:clickable="true"
                         android:focusable="true"
-                        android:layout_marginEnd="8dp" />
+                        android:layout_marginEnd="10dp" />
 
                     <TextView
                         android:id="@+id/chipPeakHours"
                         android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:background="@drawable/bg_chip"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_chip_amber"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="14dp"
-                        android:text="⏱️  Surge Shield"
-                        android:textColor="@color/text_primary"
+                        android:drawableStart="@drawable/ic_shield"
+                        android:drawablePadding="8dp"
+                        android:text="Surge Shield"
+                        android:textColor="@color/warning_amber"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:clickable="true"
                         android:focusable="true"
-                        android:layout_marginEnd="8dp" />
+                        android:layout_marginEnd="10dp" />
 
                     <TextView
-                        android:id="@+id/chipAuditReport"
+                        android:id="@+id/chipCompare"
                         android:layout_width="wrap_content"
-                        android:layout_height="38dp"
-                        android:background="@drawable/bg_chip"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_chip_purple"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="14dp"
-                        android:text="📑  Bachat Report"
-                        android:textColor="@color/text_primary"
+                        android:drawableStart="@drawable/ic_upgrade"
+                        android:drawablePadding="8dp"
+                        android:text="Smart Upgrade"
+                        android:textColor="@color/accent_purple_light"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:clickable="true"
@@ -278,7 +286,7 @@
         android:fitsSystemWindows="true"
         android:background="@color/nav_bg"
         app:itemTextColor="@color/text_primary"
-        app:itemIconTint="@color/accent_green"
+        app:itemIconTint="@color/nav_icon_tint"
         app:itemShapeInsetStart="16dp"
         app:itemShapeInsetEnd="16dp"
         app:headerLayout="@layout/nav_header"

@@ -71,7 +71,7 @@
             android:layout_weight="1"
             android:layout_height="52dp"
             android:text="Create Space"
-            android:textColor="@color/bg_main"
+            android:textColor="@color/on_accent_green"
             android:textStyle="bold"
             android:textAllCaps="false"
             android:backgroundTint="@color/accent_green"

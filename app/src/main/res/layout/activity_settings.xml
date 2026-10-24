@@ -215,7 +215,7 @@
                             android:layout_height="50dp"
                             android:background="@drawable/bg_input_dark"
                             android:paddingHorizontal="14dp"
-                            android:textColor="@color/white"
+                            android:textColor="@color/text_primary"
                             android:textColorHint="@color/text_secondary"
                             android:hint="8.00"
                             android:inputType="numberDecimal"
@@ -228,7 +228,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="50dp"
                             android:text="Update"
-                            android:textColor="@color/bg_main"
+                            android:textColor="@color/on_accent_green"
                             android:textStyle="bold"
                             android:textAllCaps="false"
                             android:backgroundTint="@color/accent_green"
@@ -282,6 +282,80 @@
                             android:textSize="12sp"
                             android:clickable="true"
                             android:focusable="true" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ELECTRICITY PROVIDER (DISCOM)"
+                android:textColor="@color/accent_green"
+                android:textSize="11sp"
+                android:letterSpacing="0.14"
+                android:textStyle="bold"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Active Provider Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/stroke_color"
+                app:strokeWidth="1dp"
+                app:cardBackgroundColor="@color/card_bg"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvSettingsStateDiscom"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Maharashtra · MSEDCL"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvSettingsAreaDesc"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pune, Thane, Nashik &amp; State-wide"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnChangeDiscom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="Change"
+                            android:textColor="@color/accent_green"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:backgroundTint="@color/card_bg_lighter"
+                            app:strokeColor="@color/accent_green"
+                            app:strokeWidth="1dp"
+                            app:cornerRadius="20dp" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -2,6 +2,7 @@ package com.example.bachat;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -31,6 +32,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -101,7 +103,7 @@ public class ApplicationsActivity extends AppCompatActivity {
             loadApplications();
         });
 
-        rvAppliances.setLayoutManager(new GridLayoutManager(this, 2));
+        rvAppliances.setLayoutManager(new LinearLayoutManager(this));
         rvAppliances.setAdapter(adapter);
 
         ensurePlanExists();
@@ -162,9 +164,15 @@ public class ApplicationsActivity extends AppCompatActivity {
         double sumWattage = 0.0;
         double sumMonthlyCost = 0.0;
 
-        float tariffRate = getSharedPreferences("BachatPrefs", MODE_PRIVATE).getFloat("tariff_rate", 8.0f);
+        SharedPreferences prefs = getSharedPreferences("BachatPrefs", MODE_PRIVATE);
+        float tariffRate = prefs.getFloat("tariff_rate", 8.0f);
         adapter.setTariffRate(tariffRate);
 
+        String userState = dbUsers.getUserState(userId);
+        String mode = prefs.getString("budget_mode_" + userId, "monthly");
+        boolean isMonthly = mode.equalsIgnoreCase("monthly");
+
+        // Load appliances for current space/plan from database
         Cursor cursor = dbPlans.getAppliancesForPlan(currentPlanId);
         if (cursor != null) {
             while (cursor.moveToNext()) {
@@ -173,6 +181,7 @@ public class ApplicationsActivity extends AppCompatActivity {
                 int qtyCol = cursor.getColumnIndex("QUANTITY");
                 int wattCol = cursor.getColumnIndex("WATTAGE");
                 int hoursCol = cursor.getColumnIndex("MAX_HOURS");
+                int allocCol = cursor.getColumnIndex("ALLOCATED_HOURS");
 
                 if (idCol >= 0 && nameCol >= 0 && qtyCol >= 0 && wattCol >= 0) {
                     long id = cursor.getLong(idCol);
@@ -182,12 +191,37 @@ public class ApplicationsActivity extends AppCompatActivity {
                     double hours = (hoursCol >= 0) ? cursor.getDouble(hoursCol) : 8.0;
                     if (hours <= 0) hours = 8.0;
 
-                    appList.add(new ApplianceAdapter.ApplianceItem(id, name, qty, watt, hours));
+                    boolean isContinuous = SmartOptimizer.isContinuousEssential(name);
+                    if (isContinuous && hours < 24.0) {
+                        hours = 24.0;
+                        dbPlans.updateApplianceDetails(id, qty, watt, 24.0);
+                    }
+
+                    double allocHours = (allocCol >= 0 && !cursor.isNull(allocCol)) ? cursor.getDouble(allocCol) : hours;
+                    if (allocHours <= 0) allocHours = hours;
+                    if (isContinuous && allocHours < 24.0) {
+                        allocHours = 24.0;
+                        dbPlans.updateAllocatedHours(id, 24.0, 0.0);
+                    }
+
+                    ApplianceAdapter.ApplianceItem item = new ApplianceAdapter.ApplianceItem(
+                            id, name, qty, watt, hours, allocHours);
+
+                    // Compute benefit ratio R_k for badge
+                    AppliancePriorityEngine.PriorityEvaluation eval =
+                            AppliancePriorityEngine.evaluateCurrent(name, watt, userState, envName);
+                    double P_k = Math.max(0.001, (watt * qty) / 1000.0);
+                    double W_k = tariffRate * P_k;
+                    double b_k = (eval.finalPriorityScore) / Math.max(0.1, hours);
+                    item.R_k = b_k / Math.max(1e-6, W_k);
+                    item.gamma_k = eval.finalPriorityScore;
+
+                    appList.add(item);
 
                     double applianceWattage = watt * qty;
                     sumWattage += applianceWattage;
-                    // Monthly kWh = (wattage * hours * 30d) / 1000 * tariffRate
-                    double monthlyKwh = (applianceWattage * hours * 30.0) / 1000.0;
+                    double effectiveHours = (allocHours >= 0) ? allocHours : hours;
+                    double monthlyKwh = (applianceWattage * effectiveHours * 30.0) / 1000.0;
                     sumMonthlyCost += monthlyKwh * tariffRate;
                 }
             }
@@ -200,6 +234,8 @@ public class ApplicationsActivity extends AppCompatActivity {
             tvEmptyState.setVisibility(View.GONE);
         }
 
+        adapter.setMonthlyMode(isMonthly);
+
         if (tvTotalWattage != null) {
             if (sumWattage >= 1000) {
                 tvTotalWattage.setText(String.format(Locale.getDefault(), "%.2f kW", sumWattage / 1000.0));
@@ -207,8 +243,18 @@ public class ApplicationsActivity extends AppCompatActivity {
                 tvTotalWattage.setText(String.format(Locale.getDefault(), "%.0f W", sumWattage));
             }
         }
+
+        TextView tvCostLabel = findViewById(R.id.tvCostLabel);
+        if (tvCostLabel != null) {
+            tvCostLabel.setText(isMonthly ? "EST. MONTHLY COST" : "EST. DAILY COST");
+        }
         if (tvTotalCost != null) {
-            tvTotalCost.setText(String.format(Locale.getDefault(), "₹ %,.2f", sumMonthlyCost));
+            if (isMonthly) {
+                tvTotalCost.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", sumMonthlyCost));
+            } else {
+                double sumDailyCost = sumMonthlyCost / 30.0;
+                tvTotalCost.setText(String.format(Locale.getDefault(), "₹ %,.2f / day", sumDailyCost));
+            }
         }
 
         adapter.notifyDataSetChanged();
@@ -239,17 +285,69 @@ public class ApplicationsActivity extends AppCompatActivity {
         double hoursPerDay = item.hoursPerDay > 0 ? item.hoursPerDay : 8.0;
         double daysPerMonth = 30.0;
         float kwhRate = getSharedPreferences("BachatPrefs", MODE_PRIVATE).getFloat("tariff_rate", 8.0f);
-        double monthlyKwh = (item.wattage * item.quantity * hoursPerDay * daysPerMonth) / 1000.0;
+
+        double effectiveHours = (item.allocatedHours >= 0) ? item.allocatedHours : hoursPerDay;
+        double monthlyKwh = (item.wattage * item.quantity * effectiveHours * daysPerMonth) / 1000.0;
         double monthlyCost = monthlyKwh * kwhRate;
 
-        tvMonthlyCost.setText(String.format(Locale.getDefault(), "₹ %,.2f", monthlyCost));
-        tvMonthlyKwh.setText(String.format(Locale.getDefault(), "%.2f kWh monthly energy consumption", monthlyKwh));
+        double origMonthlyKwh = (item.wattage * item.quantity * hoursPerDay * daysPerMonth) / 1000.0;
+        double origMonthlyCost = origMonthlyKwh * kwhRate;
+        double saveMonthly = Math.max(0.0, origMonthlyCost - monthlyCost);
+
+        SharedPreferences appPrefs = getSharedPreferences("BachatPrefs", MODE_PRIVATE);
+        String detailMode = appPrefs.getString("budget_mode_" + userId, "monthly");
+        boolean isMonthly = "monthly".equalsIgnoreCase(detailMode);
+
+        TextView tvCostHeaderLabel = dialog.findViewById(R.id.tvDetailCostHeaderLabel);
+        if (tvCostHeaderLabel != null) {
+            tvCostHeaderLabel.setText(isMonthly ? "ESTIMATED MONTHLY COST" : "ESTIMATED DAILY COST");
+        }
+
+        if (isMonthly) {
+            if (saveMonthly > 0.5) {
+                tvMonthlyCost.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo (Saves ₹ %,.0f)", monthlyCost, saveMonthly));
+            } else {
+                tvMonthlyCost.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", monthlyCost));
+            }
+            tvMonthlyKwh.setText(String.format(Locale.getDefault(), "%.1f kWh monthly energy consumption", monthlyKwh));
+        } else {
+            double dailyCost = monthlyCost / 30.0;
+            double saveDaily = saveMonthly / 30.0;
+            double dailyKwh = (item.wattage * item.quantity * effectiveHours) / 1000.0;
+            if (saveDaily > 0.05) {
+                tvMonthlyCost.setText(String.format(Locale.getDefault(), "₹ %,.2f / day (Saves ₹ %,.2f)", dailyCost, saveDaily));
+            } else {
+                tvMonthlyCost.setText(String.format(Locale.getDefault(), "₹ %,.2f / day", dailyCost));
+            }
+            tvMonthlyKwh.setText(String.format(Locale.getDefault(), "%.2f kWh daily energy consumption", dailyKwh));
+        }
 
         if (tvDutyCycle != null) {
-            tvDutyCycle.setText(String.format(Locale.getDefault(), "%.0f hrs/day", hoursPerDay));
+            if (item.allocatedHours <= 0) {
+                tvDutyCycle.setText(String.format(Locale.getDefault(), "Turn off (0 hrs) · Requested: %.0fh", hoursPerDay));
+            } else if (item.allocatedHours < hoursPerDay) {
+                tvDutyCycle.setText(String.format(Locale.getDefault(), "%.1f hrs/day (Trimmed from %.0fh)", item.allocatedHours, hoursPerDay));
+            } else {
+                tvDutyCycle.setText(String.format(Locale.getDefault(), "%.1f hrs/day (Full allocation)", item.allocatedHours));
+            }
         }
         if (tvTariffRate != null) {
             tvTariffRate.setText(String.format(Locale.getDefault(), "₹%.2f / kWh", kwhRate));
+        }
+
+        TextView tvHourlyCost = dialog.findViewById(R.id.tvDetailHourlyCost);
+        TextView tvBee = dialog.findViewById(R.id.tvDetailBee);
+
+        String userState = dbUsers.getUserState(userId);
+        AppliancePriorityEngine.PriorityEvaluation eval = AppliancePriorityEngine.evaluateCurrent(item.name, item.wattage, userState, "Home");
+        double P_k = Math.max(0.001, (item.wattage * item.quantity) / 1000.0);
+        double W_k = kwhRate * P_k;
+
+        if (tvHourlyCost != null) {
+            tvHourlyCost.setText(String.format(Locale.getDefault(), "₹ %.2f / hr (%.2f kW)", W_k, P_k));
+        }
+        if (tvBee != null) {
+            tvBee.setText(eval.beeLabel != null ? eval.beeLabel : "BEE Standard");
         }
 
         // Tint icon
@@ -301,15 +399,31 @@ public class ApplicationsActivity extends AppCompatActivity {
         }
 
         TextView tvTitle = dialog.findViewById(R.id.tvEditApplianceTitle);
+        TextView tvAllocInfo = dialog.findViewById(R.id.tvEditAllocatedInfo);
         EditText inputQty = dialog.findViewById(R.id.etEditQty);
         EditText inputHours = dialog.findViewById(R.id.etEditHours);
         EditText inputWatt = dialog.findViewById(R.id.etEditWattage);
         View btnDelete = dialog.findViewById(R.id.btnDeleteAppliance);
 
+        boolean isContinuous = SmartOptimizer.isContinuousEssential(item.name);
+        double displayHours = isContinuous ? 24.0 : item.hoursPerDay;
+        String displayStr = (displayHours == (long) displayHours) ?
+                String.format(Locale.getDefault(), "%.0f", displayHours) :
+                String.format(Locale.getDefault(), "%.1f", displayHours);
+
         tvTitle.setText("Edit " + item.name);
+        if (tvAllocInfo != null) {
+            if (isContinuous) {
+                tvAllocInfo.setText("Continuous 24h Baseline (Food preservation · Always ON)");
+            } else if (item.allocatedHours <= 0) {
+                tvAllocInfo.setText("Turned off (0 hrs / day)");
+            } else {
+                tvAllocInfo.setText(String.format(Locale.getDefault(), "Working Hours: %s hrs / day", displayStr));
+            }
+        }
         inputQty.setText(String.valueOf(item.quantity));
         if (inputHours != null) {
-            inputHours.setText(String.format(Locale.getDefault(), "%.0f", item.hoursPerDay));
+            inputHours.setText(displayStr);
         }
         inputWatt.setText(String.format(Locale.getDefault(), "%.0f", item.wattage));
 
@@ -336,6 +450,13 @@ public class ApplicationsActivity extends AppCompatActivity {
                 if (qty <= 0 || watt <= 0 || hours <= 0) {
                     Toast.makeText(this, "Quantity, wattage, and hours must be positive", Toast.LENGTH_SHORT).show();
                     return;
+                }
+                if (hours > 24.0) {
+                    Toast.makeText(this, "Operating hours cannot exceed 24 hours per day", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (isContinuous) {
+                    hours = 24.0;
                 }
                 dbPlans.updateApplianceDetails(item.id, qty, watt, hours);
                 loadApplications();
@@ -451,6 +572,9 @@ public class ApplicationsActivity extends AppCompatActivity {
             }
 
             if (!name.isEmpty() && baseWatt > 0 && qty > 0) {
+                if (SmartOptimizer.isContinuousEssential(name)) {
+                    hours = 24.0;
+                }
                 double adjustedWatt = PowerUsageDataset.applyStateMultiplier(baseWatt, state);
                 dbPlans.addApplianceToPlan(currentPlanId, 0, name, qty, adjustedWatt, hours);
                 loadApplications();

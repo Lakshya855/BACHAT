@@ -29,6 +29,19 @@ public class Database_plans extends SQLiteOpenHelper {
     }
 
     @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        try {
+            // Heal any continuous baseline appliances (e.g. refrigerators/freezers) previously reduced below 24h
+            db.execSQL("UPDATE " + TABLE_PLAN_APPLIANCES + " SET MAX_HOURS = 24.0, ALLOCATED_HOURS = 24.0 " +
+                    "WHERE (LOWER(APPLIANCE_NAME) LIKE '%fridge%' OR LOWER(APPLIANCE_NAME) LIKE '%refrigerator%' " +
+                    "OR LOWER(APPLIANCE_NAME) LIKE '%freezer%' OR LOWER(APPLIANCE_NAME) LIKE '%chiller%' " +
+                    "OR LOWER(APPLIANCE_NAME) LIKE '%double door%' OR LOWER(APPLIANCE_NAME) LIKE '%single door%') " +
+                    "AND (MAX_HOURS < 24.0 OR ALLOCATED_HOURS < 24.0)");
+        } catch (Exception ignored) {}
+    }
+
+    @Override
     public void onCreate(SQLiteDatabase db) {
         createTables(db);
     }
@@ -201,6 +214,7 @@ public class Database_plans extends SQLiteOpenHelper {
         values.put("QUANTITY", quantity);
         values.put("WATTAGE", wattage);
         values.put("MAX_HOURS", maxHours);
+        values.put("ALLOCATED_HOURS", maxHours);
 
         return db.insert(TABLE_PLAN_APPLIANCES, null, values);
     }
@@ -227,6 +241,7 @@ public class Database_plans extends SQLiteOpenHelper {
         values.put("QUANTITY", quantity);
         values.put("WATTAGE", wattage);
         values.put("MAX_HOURS", hoursPerDay > 0 ? hoursPerDay : 8.0);
+        values.put("ALLOCATED_HOURS", hoursPerDay > 0 ? hoursPerDay : 8.0);
         int result = db.update(TABLE_PLAN_APPLIANCES, values, "ID = ?", new String[]{String.valueOf(applianceRecordId)});
         return result > 0;
     }
@@ -293,10 +308,37 @@ public class Database_plans extends SQLiteOpenHelper {
         return topApp;
     }
 
+    public Cursor getAllAppliancesForUser(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        createTables(db);
+        String query = "SELECT pa.ID, pa.PLAN_ID, pa.APPLIANCE_NAME, pa.QUANTITY, pa.WATTAGE, pa.MAX_HOURS, pa.ALLOCATED_HOURS, pa.COST_CONTRIBUTION, e.NAME as ENV_NAME " +
+                "FROM " + TABLE_PLAN_APPLIANCES + " pa " +
+                "INNER JOIN " + TABLE_PLANS + " p ON pa.PLAN_ID = p.ID " +
+                "LEFT JOIN " + TABLE_ENVIRONMENTS + " e ON p.ENVIRONMENT_ID = e.ID " +
+                "WHERE p.USER_ID = ? ORDER BY pa.ID DESC";
+        return db.rawQuery(query, new String[]{String.valueOf(userId)});
+    }
+
     public boolean updateAllocatedHours(long applianceRecordId, double allocatedHours, double costContribution) {
         SQLiteDatabase db = this.getWritableDatabase();
+        createTables(db);
+
+        // Continuous essential baseline appliances (refrigerators, freezers, etc.) must NEVER be set below 24.0h
+        Cursor cursor = db.rawQuery("SELECT APPLIANCE_NAME FROM " + TABLE_PLAN_APPLIANCES + " WHERE ID = ?",
+                new String[]{String.valueOf(applianceRecordId)});
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                String name = cursor.getString(0);
+                if (SmartOptimizer.isContinuousEssential(name) && allocatedHours < 24.0) {
+                    allocatedHours = 24.0;
+                }
+            }
+            cursor.close();
+        }
+
         ContentValues values = new ContentValues();
         values.put("ALLOCATED_HOURS", allocatedHours);
+        values.put("MAX_HOURS", allocatedHours);
         values.put("COST_CONTRIBUTION", costContribution);
 
         int result = db.update(TABLE_PLAN_APPLIANCES, values, "ID = ?", new String[]{String.valueOf(applianceRecordId)});

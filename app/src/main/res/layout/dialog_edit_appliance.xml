@@ -25,6 +25,19 @@
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginTop="4dp"
+        android:layout_marginBottom="6dp" />
+
+    <TextView
+        android:id="@+id/tvEditAllocatedInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Allocated by Engine: 4.5 hrs / day"
+        android:textColor="@color/accent_teal"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:background="@drawable/bg_chip"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
         android:layout_marginBottom="18dp" />
 
     <LinearLayout
@@ -153,7 +166,7 @@
             android:layout_weight="1.2"
             android:layout_height="52dp"
             android:text="Save"
-            android:textColor="@color/bg_main"
+            android:textColor="@color/on_accent_green"
             android:textStyle="bold"
             android:textAllCaps="false"
             android:backgroundTint="@color/accent_green"

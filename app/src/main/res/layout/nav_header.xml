@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
         android:text="BACHAT User"
-        android:textColor="@color/white"
+        android:textColor="@color/text_primary"
         android:textSize="18sp"
         android:textStyle="bold" />
 

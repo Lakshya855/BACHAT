@@ -76,9 +76,10 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/tvDetailCostHeaderLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ESTIMATED MONTHLY COST"
+                android:text="ESTIMATED COST"
                 android:textColor="@color/text_secondary"
                 android:textSize="10sp"
                 android:letterSpacing="0.1"
@@ -225,7 +226,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Average Tariff Rate"
+                android:text="Average Tariff Rate (α)"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
 
@@ -236,6 +237,64 @@
                 android:text="₹8.00 / kWh"
                 android:textColor="@color/accent_purple_light"
                 android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/stroke_color" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Hourly Cost (Wk = α × Pk)"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvDetailHourlyCost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹ 0.60 / hr"
+                android:textColor="@color/accent_green"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/stroke_color" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="BEE Technology Tier"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvDetailBee"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BEE 5-Star · Inverter"
+                android:textColor="@color/accent_purple_light"
+                android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
@@ -265,7 +324,7 @@
             android:layout_weight="1"
             android:layout_height="52dp"
             android:text="Close"
-            android:textColor="@color/bg_main"
+            android:textColor="@color/on_accent_green"
             android:textStyle="bold"
             android:textAllCaps="false"
             android:backgroundTint="@color/accent_green"

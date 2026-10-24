@@ -147,7 +147,7 @@
                 android:textSize="17sp"
                 android:textStyle="bold"
                 android:textAllCaps="false"
-                android:textColor="@color/bg_main"
+                android:textColor="@color/on_accent_green"
                 android:background="@drawable/bg_button_gradient_green"
                 app:backgroundTint="@null"
                 app:icon="@drawable/ic_arrow_forward"

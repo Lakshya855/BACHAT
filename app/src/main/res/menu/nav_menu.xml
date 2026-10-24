@@ -6,6 +6,10 @@
             android:icon="@android:drawable/ic_menu_today"
             android:title="Set Bachat Target (₹)" />
         <item
+            android:id="@+id/nav_schedule"
+            android:icon="@android:drawable/ic_menu_recent_history"
+            android:title="Smart Hour Schedule" />
+        <item
             android:id="@+id/nav_compare"
             android:icon="@drawable/ic_compare"
             android:title="Smart Upgrade Advisor" />

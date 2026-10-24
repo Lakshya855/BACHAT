@@ -1,5 +1,6 @@
 package com.example.bachat;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,12 +27,15 @@ public class CompareActivity extends AppCompatActivity {
     private ImageView ivIconA, ivIconB;
 
     private double tariffRate = 8.0;
+    private int userId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_compare);
+
+        userId = getIntent().getIntExtra("USER_ID", -1);
 
         Toolbar toolbar = findViewById(R.id.toolbarCompare);
         if (toolbar != null) {
@@ -143,17 +147,27 @@ public class CompareActivity extends AppCompatActivity {
         double monthlyCostB = monthlyKwhB * tariffRate;
         double annualCostB = monthlyCostB * 12.0;
 
-        tvCostA.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", monthlyCostA));
-        tvCostB.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", monthlyCostB));
+        SharedPreferences prefs = getSharedPreferences("BachatPrefs", MODE_PRIVATE);
+        String mode = prefs.getString("budget_mode_" + userId, "monthly");
+        boolean isMonthly = "monthly".equalsIgnoreCase(mode);
+
+        if (isMonthly) {
+            tvCostA.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", monthlyCostA));
+            tvCostB.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", monthlyCostB));
+            tvRowCostA.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", monthlyCostA));
+            tvRowCostB.setText(String.format(Locale.getDefault(), "₹ %,.0f / mo", monthlyCostB));
+        } else {
+            tvCostA.setText(String.format(Locale.getDefault(), "₹ %,.2f / day", monthlyCostA / 30.0));
+            tvCostB.setText(String.format(Locale.getDefault(), "₹ %,.2f / day", monthlyCostB / 30.0));
+            tvRowCostA.setText(String.format(Locale.getDefault(), "₹ %,.2f / day", monthlyCostA / 30.0));
+            tvRowCostB.setText(String.format(Locale.getDefault(), "₹ %,.2f / day", monthlyCostB / 30.0));
+        }
 
         tvRowWattA.setText(String.format(Locale.getDefault(), "%.0f W", wattA));
         tvRowWattB.setText(String.format(Locale.getDefault(), "%.0f W", wattB));
 
-        tvRowCostA.setText(String.format(Locale.getDefault(), "₹ %,.0f", monthlyCostA));
-        tvRowCostB.setText(String.format(Locale.getDefault(), "₹ %,.0f", monthlyCostB));
-
-        tvRowAnnualA.setText(String.format(Locale.getDefault(), "₹ %,.0f", annualCostA));
-        tvRowAnnualB.setText(String.format(Locale.getDefault(), "₹ %,.0f", annualCostB));
+        tvRowAnnualA.setText(String.format(Locale.getDefault(), "₹ %,.0f / yr", annualCostA));
+        tvRowAnnualB.setText(String.format(Locale.getDefault(), "₹ %,.0f / yr", annualCostB));
 
         tvVerdictTitle.setText(verdictTitle);
         tvVerdictDesc.setText(verdictDesc);

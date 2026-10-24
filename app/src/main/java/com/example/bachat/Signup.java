@@ -38,13 +38,15 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Signup extends AppCompatActivity {
 
     private EditText name, email, password;
     private RadioGroup radioGroupgender;
     private CheckBox policy;
-    private Spinner spinnerState;
+    private Spinner spinnerState, spinnerDiscom;
     private Button go, contactSupport;
     private ImageView imageViewProfilePhoto;
     private Database_users db;
@@ -67,6 +69,7 @@ public class Signup extends AppCompatActivity {
         password = findViewById(R.id.editTextPassword);
         radioGroupgender = findViewById(R.id.Radiogroupgender);
         spinnerState = findViewById(R.id.spinnerState);
+        spinnerDiscom = findViewById(R.id.spinnerDiscom);
         policy = findViewById(R.id.checkBoxNewsletter);
         go = findViewById(R.id.buttonSave);
         contactSupport = findViewById(R.id.contact_support);
@@ -76,6 +79,28 @@ public class Signup extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PowerUsageDataset.INDIAN_STATES);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerState.setAdapter(adapter);
+
+        // Pre-select Delhi or first state and populate its DISCOMs
+        int defaultStateIndex = PowerUsageDataset.INDIAN_STATES.indexOf("Delhi");
+        if (defaultStateIndex >= 0) {
+            spinnerState.setSelection(defaultStateIndex);
+            updateDiscomDropdown("Delhi");
+        } else if (!PowerUsageDataset.INDIAN_STATES.isEmpty()) {
+            updateDiscomDropdown(PowerUsageDataset.INDIAN_STATES.get(0));
+        }
+
+        spinnerState.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                if (position >= 0 && position < PowerUsageDataset.INDIAN_STATES.size()) {
+                    String selectedState = PowerUsageDataset.INDIAN_STATES.get(position);
+                    updateDiscomDropdown(selectedState);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+        });
 
         takePictureLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK && result.getData() != null) {
@@ -148,10 +173,18 @@ public class Signup extends AppCompatActivity {
                                         }
 
                                         String state = spinnerState.getSelectedItem() != null ? spinnerState.getSelectedItem().toString() : "Delhi";
-                                        boolean inserted = db.insertGoogleUser(googleName, googleEmail, "Yes", state);
+                                        String discomText = (spinnerDiscom != null && spinnerDiscom.getSelectedItem() != null) ? spinnerDiscom.getSelectedItem().toString() : "";
+                                        DiscomProvider.Discom discomObj = DiscomProvider.findDiscom(state, discomText);
+                                        String discomName = (discomObj != null) ? discomObj.name : "";
+                                        boolean inserted = db.insertGoogleUser(googleName, googleEmail, "Yes", state, discomName);
 
                                         if (inserted) {
                                             int uId = db.getUserId(googleEmail, "");
+                                            float rate = (discomObj != null) ? (float) discomObj.defaultTariff : 8.0f;
+                                            getSharedPreferences("BachatPrefs", MODE_PRIVATE).edit()
+                                                    .putFloat("tariff_rate", rate)
+                                                    .putString("user_discom_" + uId, discomName)
+                                                    .apply();
                                             Toast.makeText(this, "Welcome to Bachat, " + googleName + "!", Toast.LENGTH_SHORT).show();
                                             Intent intent = new Intent(Signup.this, type_of_places.class);
                                             intent.putExtra("USER_ID", uId);
@@ -183,6 +216,17 @@ public class Signup extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    private void updateDiscomDropdown(String state) {
+        List<DiscomProvider.Discom> discoms = DiscomProvider.getDiscomsForState(state);
+        List<String> displayList = new ArrayList<>();
+        for (DiscomProvider.Discom d : discoms) {
+            displayList.add(d.name + " (" + d.coverageArea + ")");
+        }
+        ArrayAdapter<String> discomAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, displayList);
+        discomAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerDiscom.setAdapter(discomAdapter);
     }
 
     private void saveProfileBitmap(Bitmap bitmap) {
@@ -245,17 +289,28 @@ public class Signup extends AppCompatActivity {
         String Gender = selectedRb != null ? selectedRb.getText().toString() : "Other";
         String Policy = policy.isChecked() ? "Yes" : "No";
         String state = spinnerState.getSelectedItem() != null ? spinnerState.getSelectedItem().toString() : "Delhi";
+        String discomText = (spinnerDiscom != null && spinnerDiscom.getSelectedItem() != null) ? spinnerDiscom.getSelectedItem().toString() : "";
+        DiscomProvider.Discom discomObj = DiscomProvider.findDiscom(state, discomText);
+        String discomName = (discomObj != null) ? discomObj.name : "";
 
         if (Policy.equals("No")) {
             Toast.makeText(this, "Please agree to our terms and policy to proceed", Toast.LENGTH_LONG).show();
             return;
         }
 
-        boolean isInserted = db.insertData(Username, Email, Password, Gender, Policy, state);
+        boolean isInserted = db.insertData(Username, Email, Password, Gender, Policy, state, discomName);
 
         if (isInserted) {
+            int uId = db.getUserId(Email, Password);
+            if (uId > 0 && discomObj != null) {
+                getSharedPreferences("BachatPrefs", MODE_PRIVATE).edit()
+                        .putFloat("tariff_rate", (float) discomObj.defaultTariff)
+                        .putString("user_discom_" + uId, discomName)
+                        .apply();
+            }
+
             AlertDialog.Builder builder = new AlertDialog.Builder(Signup.this, R.style.DarkDialogTheme);
-            builder.setTitle("Account Created! 🎉");
+            builder.setTitle("Account Created!");
             builder.setMessage("Your Bachat account is ready. Log in to start tracking and optimizing your electricity bills.");
             builder.setPositiveButton("Go to Login", (dialog, which) -> {
                 Intent intent = new Intent(Signup.this, Login.class);

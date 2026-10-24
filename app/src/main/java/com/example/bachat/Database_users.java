@@ -24,6 +24,7 @@ public class Database_users extends SQLiteOpenHelper {
     public static final String COL_5 = "GENDER";
     public static final String COL_6 = "POLICY";
     public static final String COL_7 = "STATE";
+    public static final String COL_8 = "DISCOM";
 
     public Database_users(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -42,7 +43,11 @@ public class Database_users extends SQLiteOpenHelper {
                 COL_4 + " TEXT, " +
                 COL_5 + " TEXT, " +
                 COL_6 + " TEXT, " +
-                COL_7 + " TEXT)");
+                COL_7 + " TEXT, " +
+                COL_8 + " TEXT)");
+        try {
+            db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COL_8 + " TEXT");
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -69,6 +74,10 @@ public class Database_users extends SQLiteOpenHelper {
     }
 
     public boolean insertData(String name, String email, String password, String gender, String policy, String state) {
+        return insertData(name, email, password, gender, policy, state, "");
+    }
+
+    public boolean insertData(String name, String email, String password, String gender, String policy, String state, String discom) {
         SQLiteDatabase db = this.getWritableDatabase();
         createTables(db);
         ContentValues contentValues = new ContentValues();
@@ -79,6 +88,7 @@ public class Database_users extends SQLiteOpenHelper {
         contentValues.put(COL_5, gender);
         contentValues.put(COL_6, policy);
         contentValues.put(COL_7, state);
+        contentValues.put(COL_8, discom);
 
         long result = db.insertWithOnConflict(TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
         return result != -1;
@@ -117,6 +127,10 @@ public class Database_users extends SQLiteOpenHelper {
     }
 
     public boolean insertGoogleUser(String name, String email, String policy, String state) {
+        return insertGoogleUser(name, email, policy, state, "");
+    }
+
+    public boolean insertGoogleUser(String name, String email, String policy, String state, String discom) {
         SQLiteDatabase db = this.getWritableDatabase();
         createTables(db);
         String cleanEmail = email != null ? email.trim().toLowerCase() : "";
@@ -136,6 +150,7 @@ public class Database_users extends SQLiteOpenHelper {
         values.putNull(COL_5);
         values.put(COL_6, policy);
         values.put(COL_7, state);
+        values.put(COL_8, discom);
 
         long result = db.insert(TABLE_NAME, null, values);
         return result != -1;
@@ -165,5 +180,28 @@ public class Database_users extends SQLiteOpenHelper {
         }
         cursor.close();
         return state != null ? state : "";
+    }
+
+    public String getUserDiscom(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        createTables(db);
+        String discom = "";
+        try {
+            Cursor cursor = db.rawQuery("SELECT " + COL_8 + " FROM " + TABLE_NAME + " WHERE " + COL_1 + " = ?", new String[]{String.valueOf(userId)});
+            if (cursor.moveToFirst()) {
+                discom = cursor.getString(0);
+            }
+            cursor.close();
+        } catch (Exception ignored) {}
+        return discom != null ? discom : "";
+    }
+
+    public boolean updateUserStateAndDiscom(int userId, String state, String discom) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        createTables(db);
+        ContentValues values = new ContentValues();
+        values.put(COL_7, state);
+        values.put(COL_8, discom);
+        return db.update(TABLE_NAME, values, COL_1 + " = ?", new String[]{String.valueOf(userId)}) > 0;
     }
 }

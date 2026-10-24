@@ -10,7 +10,7 @@ import java.util.Map;
 public class PowerUsageDataset {
 
     public static final List<String> INDIAN_STATES = Arrays.asList(
-            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Goa",
             "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
             "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
             "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
@@ -72,11 +72,11 @@ public class PowerUsageDataset {
 
         // 3. Refrigerators
         List<ApplianceModel> fridges = new ArrayList<>();
-        fridges.add(new ApplianceModel("Refrigerators", "5-Star Inverter Double Door", 110, 24, "Smart Inverter"));
+        fridges.add(new ApplianceModel("Refrigerators", "5-Star Inverter Double Door Refrigerator", 110, 24, "Smart Inverter"));
         fridges.add(new ApplianceModel("Refrigerators", "3-Star Frost Free Refrigerator", 180, 24, "Standard"));
-        fridges.add(new ApplianceModel("Refrigerators", "Single Door Direct Cool 190L", 85, 24, "Low Draw"));
+        fridges.add(new ApplianceModel("Refrigerators", "Single Door Direct Cool Refrigerator 190L", 85, 24, "Low Draw"));
         fridges.add(new ApplianceModel("Refrigerators", "Side-by-Side Inverter Refrigerator", 240, 24, "Large Capacity"));
-        fridges.add(new ApplianceModel("Refrigerators", "Commercial Display Cooler", 550, 24, "Retail Chiller"));
+        fridges.add(new ApplianceModel("Refrigerators", "Commercial Display Cooler / Refrigerator", 550, 24, "Retail Chiller"));
         catalog.add(new ApplianceCategory("Refrigerators", fridges));
 
         // 4. Lighting
@@ -210,13 +210,13 @@ public class PowerUsageDataset {
 
         // Refrigerator matches
         if (p.contains("double door") || p.contains("inverter fridge")) {
-            return new ApplianceModel("Refrigerators", "5-Star Inverter Double Door", 110, 24, "Smart Inverter");
+            return new ApplianceModel("Refrigerators", "5-Star Inverter Double Door Refrigerator", 110, 24, "Smart Inverter");
         }
         if (p.contains("single door") || p.contains("small fridge")) {
-            return new ApplianceModel("Refrigerators", "Single Door Direct Cool 190L", 85, 24, "Low Draw");
+            return new ApplianceModel("Refrigerators", "Single Door Direct Cool Refrigerator 190L", 85, 24, "Low Draw");
         }
         if (p.contains("fridge") || p.contains("refrigerator")) {
-            return new ApplianceModel("Refrigerators", "5-Star Inverter Double Door", 110, 24, "Smart Inverter");
+            return new ApplianceModel("Refrigerators", "5-Star Inverter Double Door Refrigerator", 110, 24, "Smart Inverter");
         }
 
         // Lighting matches

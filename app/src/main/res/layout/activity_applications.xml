@@ -102,7 +102,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0 Watts"
-                    android:textColor="@color/white"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginTop="2dp" />
@@ -121,6 +121,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/tvCostLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="EST. MONTHLY COST"
@@ -142,14 +143,13 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Appliances Grid -->
+    <!-- Appliances List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAppliances"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="10dp"
-        android:paddingHorizontal="10dp"
-        android:paddingBottom="10dp"
+        android:layout_marginTop="8dp"
+        android:paddingBottom="16dp"
         android:clipToPadding="false"
         app:layout_constraintBottom_toTopOf="@id/llBottomActions"
         app:layout_constraintTop_toBottomOf="@id/cardSummary" />

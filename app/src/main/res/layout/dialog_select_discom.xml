@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="8dp"
+    app:strokeColor="@color/stroke_color"
+    app:strokeWidth="1dp"
+    app:cardBackgroundColor="@color/card_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ELECTRICITY PROVIDER"
+            android:textColor="@color/accent_green"
+            android:textSize="11sp"
+            android:letterSpacing="0.14"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Your Board / DISCOM"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Auto-populates your regional per-unit tariff and official peak-hour schedule."
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginTop="4dp" />
+
+        <!-- State Selector -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="INDIAN STATE / UT"
+            android:textColor="@color/text_secondary"
+            android:textSize="10sp"
+            android:letterSpacing="0.1"
+            android:textStyle="bold"
+            android:layout_marginTop="18dp" />
+
+        <Spinner
+            android:id="@+id/spinnerDialogState"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_input_dark"
+            android:layout_marginTop="6dp"
+            android:paddingHorizontal="12dp" />
+
+        <!-- Discom Selector -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DISTRIBUTION COMPANY (DISCOM)"
+            android:textColor="@color/text_secondary"
+            android:textSize="10sp"
+            android:letterSpacing="0.1"
+            android:textStyle="bold"
+            android:layout_marginTop="14dp" />
+
+        <Spinner
+            android:id="@+id/spinnerDialogDiscom"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_input_dark"
+            android:layout_marginTop="6dp"
+            android:paddingHorizontal="12dp" />
+
+        <!-- Tariff & Area preview badge -->
+        <LinearLayout
+            android:id="@+id/llDiscomPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_chip"
+            android:padding="12dp"
+            android:layout_marginTop="14dp">
+
+            <TextView
+                android:id="@+id/tvDialogTariffPreview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Standard Tariff: ₹ 8.50 / kWh"
+                android:textColor="@color/accent_green"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvDialogCoveragePreview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Coverage: Pune, Thane, Nashik &amp; State-wide"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelDiscomDialog"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="48dp"
+                android:text="Cancel"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/card_bg_lighter"
+                app:cornerRadius="24dp"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaveDiscomDialog"
+                android:layout_width="0dp"
+                android:layout_weight="1.4"
+                android:layout_height="48dp"
+                android:text="Apply Provider"
+                android:textColor="@color/on_accent_green"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/accent_green"
+                app:cornerRadius="24dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

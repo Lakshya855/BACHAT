@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog"
+    android:orientation="vertical"
+    android:padding="22dp">
+
+    <!-- Top Badge & Title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_icon_circle">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_bolt"
+                app:tint="@color/accent_green" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SMART HOURS OPTIMIZER"
+                android:textColor="@color/accent_green"
+                android:textSize="10sp"
+                android:letterSpacing="0.12"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Recommended Operating Hours"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Key Savings Banner Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/stroke_color"
+        app:strokeWidth="1dp"
+        app:cardBackgroundColor="#141724">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvSavingsLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PROJECTED MONEY SAVED"
+                android:textColor="@color/text_secondary"
+                android:textSize="10.5sp"
+                android:letterSpacing="0.08"
+                android:textStyle="bold" />
+
+            <!-- Money Saved Big Display -->
+            <TextView
+                android:id="@+id/tvMoneySavedHighlight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₹ 1,500 / month"
+                android:textColor="@color/accent_green"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:layout_marginTop="2dp" />
+
+            <!-- Energy Saved & Target Details -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp">
+
+                <TextView
+                    android:id="@+id/tvEnergySavedHighlight"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="188 kWh saved / mo"
+                    android:textColor="@color/accent_teal"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTargetComparison"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Target: Save ₹ 1,500/mo"
+                    android:textColor="@color/accent_purple_light"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Subtitle for recommendations list -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DEVICE DAILY OPERATING HOURS"
+        android:textColor="@color/accent_purple_light"
+        android:textSize="10.5sp"
+        android:letterSpacing="0.12"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Scrollable container for appliance recommendations -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvScheduleList"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:scrollbars="vertical" />
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDismissSchedule"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="52dp"
+            android:text="Dismiss"
+            android:textColor="@color/text_secondary"
+            android:textAllCaps="false"
+            app:cornerRadius="26dp"
+            app:strokeColor="@color/stroke_color"
+            android:layout_marginEnd="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnApplySchedule"
+            android:layout_width="0dp"
+            android:layout_weight="1.4"
+            android:layout_height="52dp"
+            android:text="Apply Changes"
+            android:textColor="@color/on_accent_green"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/accent_green"
+            app:cornerRadius="26dp" />
+    </LinearLayout>
+
+</LinearLayout>

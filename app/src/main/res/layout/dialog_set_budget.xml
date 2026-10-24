@@ -25,32 +25,74 @@
             android:layout_marginEnd="6dp" />
 
         <TextView
+            android:id="@+id/tvBudgetBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="SPENDING CEILING"
+            android:text="ELECTRICITY BUDGET"
             android:textColor="@color/accent_green"
             android:textSize="10sp"
+            android:letterSpacing="0.1"
             android:textStyle="bold" />
     </LinearLayout>
 
     <TextView
+        android:id="@+id/tvBudgetTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Set Monthly Budget"
+        android:text="Target Electricity Spend"
         android:textColor="@color/text_primary"
         android:textSize="20sp"
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/tvBudgetSubtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enter your maximum electricity spend target for this month"
+        android:text="How much do you want to spend on electricity daily or monthly?"
         android:textColor="@color/text_secondary"
         android:textSize="13sp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="16dp" />
 
-    <!-- Amount Input Card -->
+    <!-- Period Selector (Daily vs Monthly Spend) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_input_dark"
+        android:padding="3dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/tabDailyMode"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Daily Spend (₹/day)"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_secondary"
+            android:background="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/tabMonthlyMode"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Monthly Spend (₹/mo)"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_accent_green"
+            android:background="@drawable/bg_chip_selected"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <!-- Spend Amount Input Card -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -62,76 +104,119 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="16dp">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="14dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="₹ "
+                android:text="TARGET ELECTRICITY SPEND"
                 android:textColor="@color/accent_green"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:textSize="10.5sp"
+                android:letterSpacing="0.08"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
 
-            <EditText
-                android:id="@+id/etBudgetAmount"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
-                android:background="@null"
-                android:hint="5000"
-                android:inputType="numberDecimal"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvCurrencySymbol"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₹ "
+                    android:textColor="@color/accent_green"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etBudgetAmount"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="50dp"
+                    android:background="@null"
+                    android:hint="1500"
+                    android:inputType="numberDecimal"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBudgetPeriodUnit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="/ month"
+                    android:textColor="@color/accent_teal"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Dynamic Equivalence Hint -->
+            <TextView
+                android:id="@+id/tvEquivalentHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="≈ ₹ 50 / day savings goal"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Quick Increment Chips -->
+    <!-- Quick Preset Chips -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="14dp"
         android:layout_marginBottom="24dp">
 
         <TextView
-            android:id="@+id/chip2500"
+            android:id="@+id/chipOption1"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="36dp"
             android:gravity="center"
-            android:text="₹2.5k"
+            android:text="₹ 500"
             android:textColor="@color/text_primary"
             android:textSize="12sp"
             android:background="@drawable/bg_chip"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_marginEnd="6dp" />
 
         <TextView
-            android:id="@+id/chip5000"
+            android:id="@+id/chipOption2"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="36dp"
             android:gravity="center"
-            android:text="₹5.0k"
+            android:text="₹ 1,000"
             android:textColor="@color/text_primary"
             android:textSize="12sp"
             android:background="@drawable/bg_chip"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_marginEnd="6dp" />
 
         <TextView
-            android:id="@+id/chip10000"
+            android:id="@+id/chipOption3"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="36dp"
             android:gravity="center"
-            android:text="₹10k"
+            android:text="₹ 2,000"
             android:textColor="@color/text_primary"
             android:textSize="12sp"
-            android:background="@drawable/bg_chip" />
+            android:background="@drawable/bg_chip"
+            android:clickable="true"
+            android:focusable="true" />
     </LinearLayout>
 
     <!-- Buttons -->
@@ -156,10 +241,10 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSetBudget"
             android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_weight="1.6"
             android:layout_height="52dp"
-            android:text="Set Ceiling"
-            android:textColor="@color/bg_main"
+            android:text="Calculate Smart Hours"
+            android:textColor="@color/on_accent_green"
             android:textStyle="bold"
             android:textAllCaps="false"
             android:backgroundTint="@color/accent_green"
