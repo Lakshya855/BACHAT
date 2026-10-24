@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DEVICE SETUP"
+        android:textColor="@color/accent_green"
+        android:textSize="11sp"
+        android:letterSpacing="0.14"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Appliance"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 1. Category Selector -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="APPLIANCE CATEGORY"
+        android:textColor="@color/accent_green"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.12"
+        android:layout_marginBottom="6dp" />
+
+    <Spinner
+        android:id="@+id/spinnerApplianceCategory"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_input_dark"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="14dp" />
+
+    <!-- 2. Specific Type / Technology Selector -->
+    <TextView
+        android:id="@+id/tvModelLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TYPE / MOTOR TECHNOLOGY"
+        android:textColor="@color/accent_purple_light"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.12"
+        android:layout_marginBottom="6dp" />
+
+    <Spinner
+        android:id="@+id/spinnerApplianceModel"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_input_dark"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="14dp" />
+
+    <!-- Custom Inputs Container (visible only when 'Custom' selected) -->
+    <LinearLayout
+        android:id="@+id/layoutCustomFields"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/etCustomAppName"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_input_dark"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:hint="Custom Device Name (e.g. Air Fryer)"
+            android:inputType="textCapWords"
+            android:textSize="14sp"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/etCustomAppWattage"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_input_dark"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:hint="Rated Power (Watts, e.g. 1400)"
+            android:inputType="numberDecimal"
+            android:textSize="14sp"
+            android:layout_marginBottom="14dp" />
+    </LinearLayout>
+
+    <!-- Quantity & Daily Hours Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="22dp">
+
+        <!-- Quantity -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginEnd="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="QUANTITY (UNITS)"
+                android:textColor="@color/accent_green"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/etAppQty"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_input_dark"
+                android:paddingHorizontal="14dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:hint="1"
+                android:inputType="number"
+                android:text="1"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <!-- Hours per Day -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HOURS / DAY"
+                android:textColor="@color/accent_purple_light"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/etAppHours"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_input_dark"
+                android:paddingHorizontal="14dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:hint="8"
+                android:inputType="numberDecimal"
+                android:text="8"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Dialog Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelAddApp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="52dp"
+            android:text="Cancel"
+            android:textColor="@color/text_secondary"
+            android:textAllCaps="false"
+            app:cornerRadius="26dp"
+            app:strokeColor="@color/stroke_color"
+            android:layout_marginEnd="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirmAddApp"
+            android:layout_width="0dp"
+            android:layout_weight="1.2"
+            android:layout_height="52dp"
+            android:text="Add Device"
+            android:textColor="@color/bg_main"
+            android:textStyle="bold"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/accent_green"
+            app:cornerRadius="26dp" />
+    </LinearLayout>
+
+</LinearLayout>

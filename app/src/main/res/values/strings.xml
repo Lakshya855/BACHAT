@@ -13,7 +13,9 @@
     <string name="gender">Please select your Gender</string>
     <string name="terms_line">Read the Bachat User Agreement →</string>
 
-    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID_HERE</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="choose_your_environment">Choose your environment</string>
+    <string name="add_your_environment">Add your environment</string>
 </resources>

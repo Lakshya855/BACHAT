@@ -7,7 +7,7 @@
     android:padding="16dp"
     android:gravity="center_vertical"
     android:layout_margin="8dp"
-    android:background="@drawable/rounded_bg">
+    android:background="@drawable/rounded_bg_black_white_stroke">
 
     <ImageView
         android:layout_width="32dp"
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginStart="16dp"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:textSize="20sp"
         android:textStyle="bold" />
 </LinearLayout>

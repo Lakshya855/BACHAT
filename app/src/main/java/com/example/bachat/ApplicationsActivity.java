@@ -1,46 +1,69 @@
 package com.example.bachat;
 
-import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.speech.RecognizerIntent;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import com.google.android.material.button.MaterialButton;
+
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class ApplicationsActivity extends AppCompatActivity {
 
     private int userId;
     private int envId;
     private String envName;
+    private String state;
 
-    private ListView listViewApplications;
-    private Button buttonAddApplication;
-    private TextView textViewPlaceName;
+    private Database_plans dbPlans;
+    private Database_users dbUsers;
 
-    private ArrayList<ApplicationItem> appList;
-    private AppListAdapter adapter;
+    private RecyclerView rvAppliances;
+    private MaterialButton buttonAddAppliance;
+    private ImageButton btnVoiceInput;
+    private ImageButton btnBack;
+    private TextView tvTitle;
+    private TextView tvEmptyState;
+    private TextView tvTotalWattage;
+    private TextView tvTotalCost;
+
+    private ArrayList<ApplianceAdapter.ApplianceItem> appList;
+    private ApplianceAdapter adapter;
+
+    private long currentPlanId = -1;
+
+    private ActivityResultLauncher<Intent> voiceResultLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,22 +74,52 @@ public class ApplicationsActivity extends AppCompatActivity {
         userId = getIntent().getIntExtra("USER_ID", -1);
         envId = getIntent().getIntExtra("ENVIRONMENT_ID", -1);
         envName = getIntent().getStringExtra("ENVIRONMENT_NAME");
+        if (envName == null) envName = "Space";
 
-        listViewApplications = findViewById(R.id.listViewApplications);
-        buttonAddApplication = findViewById(R.id.buttonAddApplication);
-        textViewPlaceName = findViewById(R.id.textViewPlaceName);
+        dbPlans = new Database_plans(this);
+        dbUsers = new Database_users(this);
+        state = dbUsers.getUserState(userId);
 
-        if (envName != null) {
-            textViewPlaceName.setText(envName);
+        rvAppliances = findViewById(R.id.rvAppliances);
+        buttonAddAppliance = findViewById(R.id.buttonAddAppliance);
+        btnVoiceInput = findViewById(R.id.btnVoiceInput);
+        btnBack = findViewById(R.id.btnBack);
+        tvTitle = findViewById(R.id.tvTitle);
+        tvEmptyState = findViewById(R.id.tvEmptyState);
+        tvTotalWattage = findViewById(R.id.tvTotalWattage);
+        tvTotalCost = findViewById(R.id.tvTotalCost);
+
+        tvTitle.setText(envName + " Appliances");
+
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
         }
 
         appList = new ArrayList<>();
-        adapter = new AppListAdapter(this, appList);
-        listViewApplications.setAdapter(adapter);
+        adapter = new ApplianceAdapter(appList, this::showApplianceDetailsDialog, (item, newQty) -> {
+            dbPlans.updateApplianceDetails(item.id, newQty, item.wattage, item.hoursPerDay);
+            loadApplications();
+        });
 
+        rvAppliances.setLayoutManager(new GridLayoutManager(this, 2));
+        rvAppliances.setAdapter(adapter);
+
+        ensurePlanExists();
         loadApplications();
 
-        buttonAddApplication.setOnClickListener(v -> showAddApplicationDialog());
+        buttonAddAppliance.setOnClickListener(v -> showAddApplicationDialog());
+
+        voiceResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                ArrayList<String> matches = result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (matches != null && !matches.isEmpty()) {
+                    String spokenText = matches.get(0);
+                    processVoiceInput(spokenText);
+                }
+            }
+        });
+
+        btnVoiceInput.setOnClickListener(v -> startVoiceRecognition());
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -75,93 +128,280 @@ public class ApplicationsActivity extends AppCompatActivity {
         });
     }
 
-    private void loadApplications() {
-        appList.clear();
-        File file = new File(getExternalFilesDir(null), "applications.csv");
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length >= 7) {
-                        int fUserId = Integer.parseInt(parts[0]);
-                        int fEnvId = Integer.parseInt(parts[1]);
-                        if (fUserId == userId && fEnvId == envId) {
-                            String name = parts[2];
-                            String power = parts[3];
-                            String voltage = parts[4];
-                            String budget = parts[5];
-                            String type = parts[6];
-                            appList.add(new ApplicationItem(name, power, voltage, budget, type));
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadApplications();
+    }
+
+    private void ensurePlanExists() {
+        Cursor cursor = dbPlans.getPlansForUser(userId);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                int envIdCol = cursor.getColumnIndex("ENVIRONMENT_ID");
+                if (envIdCol >= 0) {
+                    int planEnvId = cursor.getInt(envIdCol);
+                    if (planEnvId == envId) {
+                        int idCol = cursor.getColumnIndex("ID");
+                        if (idCol >= 0) {
+                            currentPlanId = cursor.getLong(idCol);
                         }
+                        break;
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            }
+            cursor.close();
+        }
+        if (currentPlanId == -1) {
+            currentPlanId = dbPlans.createPlan(userId, envId, 30, 100.0);
+        }
+    }
+
+    private void loadApplications() {
+        appList.clear();
+        double sumWattage = 0.0;
+        double sumMonthlyCost = 0.0;
+
+        float tariffRate = getSharedPreferences("BachatPrefs", MODE_PRIVATE).getFloat("tariff_rate", 8.0f);
+        adapter.setTariffRate(tariffRate);
+
+        Cursor cursor = dbPlans.getAppliancesForPlan(currentPlanId);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                int idCol = cursor.getColumnIndex("ID");
+                int nameCol = cursor.getColumnIndex("APPLIANCE_NAME");
+                int qtyCol = cursor.getColumnIndex("QUANTITY");
+                int wattCol = cursor.getColumnIndex("WATTAGE");
+                int hoursCol = cursor.getColumnIndex("MAX_HOURS");
+
+                if (idCol >= 0 && nameCol >= 0 && qtyCol >= 0 && wattCol >= 0) {
+                    long id = cursor.getLong(idCol);
+                    String name = cursor.getString(nameCol);
+                    int qty = cursor.getInt(qtyCol);
+                    double watt = cursor.getDouble(wattCol);
+                    double hours = (hoursCol >= 0) ? cursor.getDouble(hoursCol) : 8.0;
+                    if (hours <= 0) hours = 8.0;
+
+                    appList.add(new ApplianceAdapter.ApplianceItem(id, name, qty, watt, hours));
+
+                    double applianceWattage = watt * qty;
+                    sumWattage += applianceWattage;
+                    // Monthly kWh = (wattage * hours * 30d) / 1000 * tariffRate
+                    double monthlyKwh = (applianceWattage * hours * 30.0) / 1000.0;
+                    sumMonthlyCost += monthlyKwh * tariffRate;
+                }
+            }
+            cursor.close();
+        }
+
+        if (appList.isEmpty()) {
+            tvEmptyState.setVisibility(View.VISIBLE);
+        } else {
+            tvEmptyState.setVisibility(View.GONE);
+        }
+
+        if (tvTotalWattage != null) {
+            if (sumWattage >= 1000) {
+                tvTotalWattage.setText(String.format(Locale.getDefault(), "%.2f kW", sumWattage / 1000.0));
+            } else {
+                tvTotalWattage.setText(String.format(Locale.getDefault(), "%.0f W", sumWattage));
             }
         }
+        if (tvTotalCost != null) {
+            tvTotalCost.setText(String.format(Locale.getDefault(), "₹ %,.2f", sumMonthlyCost));
+        }
+
         adapter.notifyDataSetChanged();
     }
 
+    private void showApplianceDetailsDialog(ApplianceAdapter.ApplianceItem item) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_appliance_details);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvName = dialog.findViewById(R.id.tvDetailName);
+        TextView tvMonthlyCost = dialog.findViewById(R.id.tvDetailMonthlyCost);
+        TextView tvMonthlyKwh = dialog.findViewById(R.id.tvDetailMonthlyKwh);
+        TextView tvQty = dialog.findViewById(R.id.tvDetailQty);
+        TextView tvWattage = dialog.findViewById(R.id.tvDetailWattage);
+        TextView tvDutyCycle = dialog.findViewById(R.id.tvDetailDutyCycle);
+        TextView tvTariffRate = dialog.findViewById(R.id.tvDetailTariffRate);
+        ImageView ivIcon = dialog.findViewById(R.id.ivDetailIcon);
+
+        tvName.setText(item.name);
+        tvQty.setText(item.quantity + " Unit" + (item.quantity > 1 ? "s" : ""));
+        tvWattage.setText(String.format(Locale.getDefault(), "%.0f Watts", item.wattage));
+
+        double hoursPerDay = item.hoursPerDay > 0 ? item.hoursPerDay : 8.0;
+        double daysPerMonth = 30.0;
+        float kwhRate = getSharedPreferences("BachatPrefs", MODE_PRIVATE).getFloat("tariff_rate", 8.0f);
+        double monthlyKwh = (item.wattage * item.quantity * hoursPerDay * daysPerMonth) / 1000.0;
+        double monthlyCost = monthlyKwh * kwhRate;
+
+        tvMonthlyCost.setText(String.format(Locale.getDefault(), "₹ %,.2f", monthlyCost));
+        tvMonthlyKwh.setText(String.format(Locale.getDefault(), "%.2f kWh monthly energy consumption", monthlyKwh));
+
+        if (tvDutyCycle != null) {
+            tvDutyCycle.setText(String.format(Locale.getDefault(), "%.0f hrs/day", hoursPerDay));
+        }
+        if (tvTariffRate != null) {
+            tvTariffRate.setText(String.format(Locale.getDefault(), "₹%.2f / kWh", kwhRate));
+        }
+
+        // Tint icon
+        String n = item.name.toLowerCase();
+        int iconRes = android.R.drawable.ic_menu_agenda;
+        int colorRes = R.color.icon_default;
+        if (n.contains("fan")) {
+            iconRes = android.R.drawable.ic_menu_rotate;
+            colorRes = R.color.icon_fan;
+        } else if (n.contains("ac") || n.contains("air") || n.contains("cooler")) {
+            iconRes = android.R.drawable.ic_menu_sort_by_size;
+            colorRes = R.color.icon_ac;
+        } else if (n.contains("light") || n.contains("lamp") || n.contains("bulb") || n.contains("tube")) {
+            iconRes = android.R.drawable.ic_menu_day;
+            colorRes = R.color.icon_light;
+        } else if (n.contains("tv") || n.contains("screen") || n.contains("qled") || n.contains("oled")) {
+            iconRes = android.R.drawable.ic_menu_slideshow;
+            colorRes = R.color.icon_tv;
+        } else if (n.contains("fridge") || n.contains("refrigerator")) {
+            iconRes = android.R.drawable.ic_menu_directions;
+            colorRes = R.color.icon_fridge;
+        } else if (n.contains("wash")) {
+            iconRes = android.R.drawable.ic_menu_compass;
+            colorRes = R.color.icon_washing;
+        } else if (n.contains("computer") || n.contains("pc") || n.contains("laptop")) {
+            iconRes = android.R.drawable.ic_menu_call;
+            colorRes = R.color.icon_computer;
+        }
+        int color = ContextCompat.getColor(this, colorRes);
+        ivIcon.setImageResource(iconRes);
+        ivIcon.setImageTintList(ColorStateList.valueOf(color));
+
+        dialog.findViewById(R.id.btnCloseDetails).setOnClickListener(v -> dialog.dismiss());
+        dialog.findViewById(R.id.btnEditFromDetails).setOnClickListener(v -> {
+            dialog.dismiss();
+            showEditApplianceDialog(item);
+        });
+
+        dialog.show();
+    }
+
+    private void showEditApplianceDialog(ApplianceAdapter.ApplianceItem item) {
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_edit_appliance);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        TextView tvTitle = dialog.findViewById(R.id.tvEditApplianceTitle);
+        EditText inputQty = dialog.findViewById(R.id.etEditQty);
+        EditText inputHours = dialog.findViewById(R.id.etEditHours);
+        EditText inputWatt = dialog.findViewById(R.id.etEditWattage);
+        View btnDelete = dialog.findViewById(R.id.btnDeleteAppliance);
+
+        tvTitle.setText("Edit " + item.name);
+        inputQty.setText(String.valueOf(item.quantity));
+        if (inputHours != null) {
+            inputHours.setText(String.format(Locale.getDefault(), "%.0f", item.hoursPerDay));
+        }
+        inputWatt.setText(String.format(Locale.getDefault(), "%.0f", item.wattage));
+
+        if (btnDelete != null) {
+            btnDelete.setOnClickListener(v -> {
+                dbPlans.deleteApplianceFromPlan(item.id);
+                loadApplications();
+                Toast.makeText(this, item.name + " removed", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+        }
+
+        dialog.findViewById(R.id.btnCancelEdit).setOnClickListener(v -> dialog.dismiss());
+        dialog.findViewById(R.id.btnSaveEdit).setOnClickListener(v -> {
+            try {
+                int qty = Integer.parseInt(inputQty.getText().toString().trim());
+                double watt = Double.parseDouble(inputWatt.getText().toString().trim());
+                double hours = item.hoursPerDay;
+                if (inputHours != null) {
+                    String hStr = inputHours.getText().toString().trim();
+                    if (!hStr.isEmpty()) hours = Double.parseDouble(hStr);
+                }
+
+                if (qty <= 0 || watt <= 0 || hours <= 0) {
+                    Toast.makeText(this, "Quantity, wattage, and hours must be positive", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                dbPlans.updateApplianceDetails(item.id, qty, watt, hours);
+                loadApplications();
+                Toast.makeText(this, "Appliance updated", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            } catch (Exception e) {
+                Toast.makeText(this, "Please enter valid numbers", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+    }
+
     private void showAddApplicationDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Application");
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_add_appliance_modern);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
 
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_add_application, null);
-        builder.setView(dialogView);
+        Spinner spinnerCat = dialog.findViewById(R.id.spinnerApplianceCategory);
+        Spinner spinnerModel = dialog.findViewById(R.id.spinnerApplianceModel);
+        TextView tvModelLabel = dialog.findViewById(R.id.tvModelLabel);
+        View layoutCustom = dialog.findViewById(R.id.layoutCustomFields);
+        EditText etCustomName = dialog.findViewById(R.id.etCustomAppName);
+        EditText etCustomWatt = dialog.findViewById(R.id.etCustomAppWattage);
+        EditText etQty = dialog.findViewById(R.id.etAppQty);
+        EditText etHours = dialog.findViewById(R.id.etAppHours);
 
-        Spinner spinnerApplianceType = dialogView.findViewById(R.id.spinnerApplianceType);
-        EditText editTextAppName = dialogView.findViewById(R.id.editTextAppName);
-        EditText editTextPower = dialogView.findViewById(R.id.editTextPower);
-        EditText editTextVoltage = dialogView.findViewById(R.id.editTextVoltage);
-        EditText editTextBudget = dialogView.findViewById(R.id.editTextBudget);
+        List<PowerUsageDataset.ApplianceCategory> catalog = PowerUsageDataset.getApplianceCatalog();
+        List<String> catNames = new ArrayList<>();
+        for (PowerUsageDataset.ApplianceCategory cat : catalog) {
+            catNames.add(cat.name);
+        }
+        catNames.add("Custom Device");
 
-        String[] types = {"Custom", "AC", "Fridge", "TV", "Bulb", "Fan"};
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, types);
-        spinnerApplianceType.setAdapter(spinnerAdapter);
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, catNames);
+        spinnerCat.setAdapter(catAdapter);
 
-        spinnerApplianceType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spinnerCat.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selected = types[position];
-                switch (selected) {
-                    case "AC":
-                        editTextAppName.setText("AC");
-                        editTextPower.setText("1500");
-                        editTextVoltage.setText("220");
-                        editTextBudget.setText("50");
-                        break;
-                    case "Fridge":
-                        editTextAppName.setText("Fridge");
-                        editTextPower.setText("400");
-                        editTextVoltage.setText("220");
-                        editTextBudget.setText("20");
-                        break;
-                    case "TV":
-                        editTextAppName.setText("TV");
-                        editTextPower.setText("100");
-                        editTextVoltage.setText("220");
-                        editTextBudget.setText("10");
-                        break;
-                    case "Bulb":
-                        editTextAppName.setText("Bulb");
-                        editTextPower.setText("10");
-                        editTextVoltage.setText("220");
-                        editTextBudget.setText("2");
-                        break;
-                    case "Fan":
-                        editTextAppName.setText("Fan");
-                        editTextPower.setText("50");
-                        editTextVoltage.setText("220");
-                        editTextBudget.setText("5");
-                        break;
-                    case "Custom":
-                        editTextAppName.setText("");
-                        editTextPower.setText("");
-                        editTextVoltage.setText("");
-                        editTextBudget.setText("");
-                        break;
+                if (position == catNames.size() - 1) {
+                    // Custom
+                    if (layoutCustom != null) layoutCustom.setVisibility(View.VISIBLE);
+                    if (spinnerModel != null) spinnerModel.setVisibility(View.GONE);
+                    if (tvModelLabel != null) tvModelLabel.setVisibility(View.GONE);
+                    if (etHours != null) etHours.setText("8");
+                } else {
+                    if (layoutCustom != null) layoutCustom.setVisibility(View.GONE);
+                    if (spinnerModel != null) spinnerModel.setVisibility(View.VISIBLE);
+                    if (tvModelLabel != null) tvModelLabel.setVisibility(View.VISIBLE);
+
+                    PowerUsageDataset.ApplianceCategory selectedCat = catalog.get(position);
+                    List<String> modelStrings = new ArrayList<>();
+                    for (PowerUsageDataset.ApplianceModel model : selectedCat.models) {
+                        modelStrings.add(model.name + " (" + (int) model.baseWattage + "W - " + model.badge + ")");
+                    }
+                    ArrayAdapter<String> modelAdapter = new ArrayAdapter<>(ApplicationsActivity.this,
+                            android.R.layout.simple_spinner_dropdown_item, modelStrings);
+                    spinnerModel.setAdapter(modelAdapter);
+                    if (!selectedCat.models.isEmpty() && etHours != null) {
+                        etHours.setText(String.format(Locale.getDefault(), "%.0f", selectedCat.models.get(0).defaultHours));
+                    }
                 }
             }
 
@@ -169,79 +409,123 @@ public class ApplicationsActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        builder.setPositiveButton("Add", (dialog, which) -> {
-            String name = editTextAppName.getText().toString().trim();
-            String power = editTextPower.getText().toString().trim();
-            String voltage = editTextVoltage.getText().toString().trim();
-            String budget = editTextBudget.getText().toString().trim();
-            String type = spinnerApplianceType.getSelectedItem().toString();
+        spinnerModel.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                int catPos = spinnerCat.getSelectedItemPosition();
+                if (catPos >= 0 && catPos < catalog.size()) {
+                    PowerUsageDataset.ApplianceCategory cat = catalog.get(catPos);
+                    if (position >= 0 && position < cat.models.size() && etHours != null) {
+                        etHours.setText(String.format(Locale.getDefault(), "%.0f", cat.models.get(position).defaultHours));
+                    }
+                }
+            }
 
-            if (!name.isEmpty() && !power.isEmpty()) {
-                saveApplicationToCSV(name, power, voltage, budget, type);
-                loadApplications();
-                Toast.makeText(this, "Application added", Toast.LENGTH_SHORT).show();
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        dialog.findViewById(R.id.btnCancelAddApp).setOnClickListener(v -> dialog.dismiss());
+        dialog.findViewById(R.id.btnConfirmAddApp).setOnClickListener(v -> {
+            int catPos = spinnerCat.getSelectedItemPosition();
+            String qtyStr = etQty.getText().toString().trim();
+            int qty = qtyStr.isEmpty() ? 1 : Integer.parseInt(qtyStr);
+
+            String hoursStr = etHours != null ? etHours.getText().toString().trim() : "8";
+            double hours = hoursStr.isEmpty() ? 8.0 : Double.parseDouble(hoursStr);
+
+            String name;
+            double baseWatt;
+
+            if (catPos == catNames.size() - 1) {
+                name = etCustomName.getText().toString().trim();
+                String wStr = etCustomWatt.getText().toString().trim();
+                baseWatt = wStr.isEmpty() ? 100.0 : Double.parseDouble(wStr);
             } else {
-                Toast.makeText(this, "Please fill required fields", Toast.LENGTH_SHORT).show();
+                PowerUsageDataset.ApplianceCategory cat = catalog.get(catPos);
+                int modelPos = spinnerModel.getSelectedItemPosition();
+                if (modelPos < 0 || modelPos >= cat.models.size()) modelPos = 0;
+                PowerUsageDataset.ApplianceModel model = cat.models.get(modelPos);
+                name = model.name;
+                baseWatt = model.baseWattage;
+            }
+
+            if (!name.isEmpty() && baseWatt > 0 && qty > 0) {
+                double adjustedWatt = PowerUsageDataset.applyStateMultiplier(baseWatt, state);
+                dbPlans.addApplianceToPlan(currentPlanId, 0, name, qty, adjustedWatt, hours);
+                loadApplications();
+                Toast.makeText(this, name + " added to " + envName, Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            } else {
+                Toast.makeText(this, "Please enter valid appliance details", Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
+        dialog.show();
     }
 
-    private void saveApplicationToCSV(String name, String power, String voltage, String budget, String type) {
+    private void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say appliances (e.g. 2 BLDC fans, 1 inverter AC, 4 LED bulbs)");
+
         try {
-            File file = new File(getExternalFilesDir(null), "applications.csv");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileWriter writer = new FileWriter(file, true);
-            // Format: userId,envId,name,power,voltage,budget,type
-            writer.append(String.valueOf(userId)).append(",")
-                    .append(String.valueOf(envId)).append(",")
-                    .append(name).append(",")
-                    .append(power).append(",")
-                    .append(voltage).append(",")
-                    .append(budget).append(",")
-                    .append(type).append("\n");
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            voiceResultLauncher.launch(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Speech recognition is not supported on this device.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private static class ApplicationItem {
-        String name, power, voltage, budget, type;
-        ApplicationItem(String name, String power, String voltage, String budget, String type) {
-            this.name = name;
-            this.power = power;
-            this.voltage = voltage;
-            this.budget = budget;
-            this.type = type;
-        }
-    }
+    private void processVoiceInput(String spokenText) {
+        String lowerText = spokenText.toLowerCase(Locale.ROOT);
+        // Split on 'and', comma, semicolons
+        String[] segments = lowerText.split("(?i)\\b(and)\\b|[,;]");
 
-    private class AppListAdapter extends ArrayAdapter<ApplicationItem> {
-        AppListAdapter(AppCompatActivity context, ArrayList<ApplicationItem> list) {
-            super(context, 0, list);
-        }
+        List<String> addedSummaries = new ArrayList<>();
 
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_application, parent, false);
+        for (String segment : segments) {
+            String phrase = segment.trim();
+            if (phrase.isEmpty()) continue;
+
+            // Extract quantity if present
+            int qty = 1;
+            String[] tokens = phrase.split("\\s+");
+            for (String t : tokens) {
+                if (t.matches("\\d+")) {
+                    qty = Integer.parseInt(t);
+                    break;
+                } else if (t.equals("one") || t.equals("a") || t.equals("an")) {
+                    qty = 1;
+                    break;
+                } else if (t.equals("two")) {
+                    qty = 2;
+                    break;
+                } else if (t.equals("three")) {
+                    qty = 3;
+                    break;
+                } else if (t.equals("four")) {
+                    qty = 4;
+                    break;
+                } else if (t.equals("five")) {
+                    qty = 5;
+                    break;
+                }
             }
-            ApplicationItem item = getItem(position);
-            TextView name = convertView.findViewById(R.id.textViewAppName);
-            TextView details = convertView.findViewById(R.id.textViewAppDetails);
 
-            if (item != null) {
-                name.setText(item.name);
-                details.setText("Power: " + item.power + "W | Voltage: " + item.voltage + "V | Budget: $" + item.budget);
+            PowerUsageDataset.ApplianceModel matched = PowerUsageDataset.matchVoiceAppliance(phrase);
+            if (matched != null) {
+                double adjustedWatt = PowerUsageDataset.applyStateMultiplier(matched.baseWattage, state);
+                dbPlans.addApplianceToPlan(currentPlanId, 0, matched.name, qty, adjustedWatt, matched.defaultHours);
+                addedSummaries.add(qty + "x " + matched.name);
             }
-            return convertView;
+        }
+
+        if (!addedSummaries.isEmpty()) {
+            loadApplications();
+            Toast.makeText(this, "Added: " + TextUtils.join(", ", addedSummaries), Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "Could not match appliances in: \"" + spokenText + "\". Try saying '2 BLDC fans' or '1 AC'", Toast.LENGTH_LONG).show();
         }
     }
 }

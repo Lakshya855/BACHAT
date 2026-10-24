@@ -9,6 +9,9 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+*.nosync
+build.nosync
+/app/build*
 /captures
 .externalNativeBuild
 .cxx
