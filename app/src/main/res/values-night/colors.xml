@@ -8,8 +8,8 @@
     <color name="purpledark">#0A0A0E</color>
     <color name="darknavy">#121318</color>
     <color name="login">#7048E8</color>
-    <color name="bright_green">#00E896</color>
-    <color name="green">#00E896</color>
+    <color name="bright_green">#00A86B</color>
+    <color name="green">#00A86B</color>
 
     <!-- Text Colors (Dark Mode: Crisp White / Silver) -->
     <color name="text_primary">#F4F4F6</color>
@@ -25,8 +25,8 @@
     <!-- Accents -->
     <color name="accent_purple">#7C5CFC</color>
     <color name="accent_purple_light">#9B7FFF</color>
-    <color name="accent_green">#00E896</color>
-    <color name="accent_green_dark">#00C07A</color>
+    <color name="accent_green">#00A86B</color>
+    <color name="accent_green_dark">#008F5B</color>
     <color name="on_accent_green">#121318</color>
     <color name="accent_teal">#00D4AA</color>
     <color name="accent_coral">#FF5C5C</color>
