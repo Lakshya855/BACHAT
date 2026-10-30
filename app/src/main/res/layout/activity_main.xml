@@ -55,8 +55,8 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/googlesans_17pt_semibold"
                 android:text="@string/tagline0"
-                android:textColor="@color/accent_green"
-                android:textSize="36sp"
+                android:textColor="@color/green"
+                android:textSize="40sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -65,8 +65,8 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/googlesans_17pt_semibold"
                 android:text="@string/tagline0.1"
-                android:textColor="@color/white"
-                android:textSize="36sp"
+                android:textColor="@color/text_primary"
+                android:textSize="40sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -75,7 +75,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/tagline1"
                 android:textColor="@color/text_secondary"
-                android:textSize="20sp"
+                android:textSize="30sp"
                 android:layout_marginTop="20dp" />
 
             <TextView
@@ -83,8 +83,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/tagline2"
-                android:textColor="@color/accent_green"
-                android:textSize="32sp"
+                android:textColor="@color/green"
+                android:textSize="50sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -93,7 +93,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/tagline4"
                 android:textColor="@color/text_secondary"
-                android:textSize="15sp"
+                android:textSize="25sp"
                 android:layout_marginTop="6dp" />
 
             <!-- Center Image Illustration -->
