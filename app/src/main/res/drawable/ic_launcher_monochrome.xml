@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Coin behind wallet -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,22a16,16 0,0 1,16 16c0,2.1 -0.4,4.1 -1.1,5.9H39.1A16,16 0,0 1,54 22z" />
+    <!-- Wallet Body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,44h38c4.4,0 8,3.6 8,8v18c0,4.4 -3.6,8 -8,8H34c-4.4,0 -8,-3.6 -8,-8V52c0,-4.4 3.6,-8 8,-8z" />
+    <!-- Wallet Latch -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M76,53h4c3.3,0 6,2.7 6,6v2c0,3.3 -2.7,6 -6,6h-4V53z" />
+    <!-- Lightning Bolt Cutout (tinted transparent / reverse punch) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M54,49l-6,11h5l-2,9 8,-12h-5l3,-8z" />
+</vector>

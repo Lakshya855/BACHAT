@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.MicroFleetApp" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/page</item>
+        <item name="android:statusBarColor">@color/page</item>
+        <item name="android:navigationBarColor">@color/page</item>
+        <item name="android:colorPrimary">#8B5CF6</item>
+        <item name="android:colorPrimaryDark">#08080B</item>
+        <item name="android:colorAccent">#A78BFA</item>
+    </style>
+</resources>
